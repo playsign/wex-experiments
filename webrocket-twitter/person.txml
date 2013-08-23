@@ -1,0 +1,65 @@
+<!DOCTYPE Scene>
+<scene>
+ <entity temporary="true" id="6" sync="true">
+  <component temporary="false" type="Mesh" sync="true">
+   <attribute value="0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,1.000000,1.000000,1.000000" type="Transform" id="nodeTransformation" name="Transform"/>
+   <attribute value="https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/fig1.mesh" type="AssetReference" id="meshRef" name="Mesh ref"/>
+   <attribute value="" type="AssetReference" id="skeletonRef" name="Skeleton ref"/>
+   <attribute value="" type="AssetReferenceList" id="meshMaterial" name="Mesh materials"/>
+   <attribute value="0.000000" type="real" id="drawDistance" name="Draw distance"/>
+   <attribute value="true" type="bool" id="castShadows" name="Cast shadows"/>
+   <attribute value="false" type="bool" id="useInstancing" name="Use instancing"/>
+  </component>
+  <component temporary="false" type="Name" sync="true">
+   <attribute value="Person" type="string" id="name" name="Name"/>
+   <attribute value="" type="string" id="description" name="Description"/>
+   <attribute value="" type="string" id="group" name="Group"/>
+  </component>
+  <component temporary="false" type="Placeable" sync="true">
+   <attribute value="40.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.001000,0.001000,0.001000" type="Transform" id="transform" name="Transform"/>
+   <attribute value="false" type="bool" id="drawDebug" name="Show bounding box"/>
+   <attribute value="true" type="bool" id="visible" name="Visible"/>
+   <attribute value="1" type="int" id="selectionLayer" name="Selection layer"/>
+   <attribute value="1" type="EntityReference" id="parentRef" name="Parent entity ref"/>
+   <attribute value="" type="string" id="parentBone" name="Parent bone name"/>
+  </component>
+  <component temporary="false" type="HoveringText" sync="true" name="TooltipText">
+   <attribute value="2013-08-12T13:31:14Z" type="string" id="text" name="Text"/>
+   <attribute value="Arial" type="string" id="font" name="Font"/>
+   <attribute value="16" type="int" id="fontSize" name="Font Size"/>
+   <attribute value="0.000000 0.000000 0.000000 1.000000" type="Color" id="fontColor" name="Font Color"/>
+   <attribute value="1.000000 1.000000 1.000000 1.000000" type="Color" id="backgroundColor" name="Background Color"/>
+   <attribute value="0.000000 0.000000 0.000000 0.000000" type="Color" id="borderColor" name="Border Color"/>
+   <attribute value="0.000000" type="real" id="borderThickness" name="Border Thickness"/>
+   <attribute value="0.000000 400.0000 0.000000" type="float3" id="position" name="Position"/>
+   <attribute value="false" type="bool" id="usingGrad" name="Use Gradient"/>
+   <attribute value="0.000000 0.000000 0.000000 1.000000" type="Color" id="gradStart" name="Gradient Start"/>
+   <attribute value="1.000000 1.000000 1.000000 1.000000" type="Color" id="gradEnd" name="Gradient End"/>
+   <attribute value="0.000000" type="real" id="overlayAlpha" name="Overlay Alpha"/>
+   <attribute value="500.0000" type="real" id="width" name="Width"/>
+   <attribute value="250.0000" type="real" id="height" name="Height"/>
+   <attribute value="256.000000" type="real" id="texWidth" name="Texture Width"/>
+   <attribute value="128.000000" type="real" id="texHeight" name="Texture Height"/>
+   <attribute value="0.000000 0.000000" type="float2" id="cornerRadius" name="Corner Radius"/>
+   <attribute value="true" type="bool" id="enableMipmapping" name="Enable Mipmapping"/>
+   <attribute value="HoveringText.material" type="AssetReference" id="material" name="Material"/>
+  </component>
+  <component temporary="true" type="Highlight" sync="false" name="EcEditorHighlight">
+   <attribute value="true" type="bool" id="visible" name="Is visible"/>
+   <attribute value="0.300000 0.500000 0.100000 0.500000" type="Color" id="solidColor" name="Solid color"/>
+   <attribute value="1.000000 1.000000 1.000000 0.500000" type="Color" id="outlineColor" name="Outline color"/>
+  </component>
+
+   <component type="EC_Script" sync="true">
+   <attribute value="https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/person.js" name="Script ref"/>
+   <attribute value="true" name="Run on load"/>
+   <attribute value="0" name="Run mode"/>
+   <attribute value="" name="Script application name"/>
+   <attribute value="" name="Script class name"/>
+  </component>
+
+      <component type="EC_DynamicComponent" sync="true" name="personDC">
+   <attribute value="false" type="bool" id="rotate" name="rotate"/>
+  </component>
+ </entity>
+</scene>
