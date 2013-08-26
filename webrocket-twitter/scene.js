@@ -25,9 +25,10 @@ sceneinteract.EntityClicked.connect(onClicked);
 
 
 
-// RequestAsset("https://api.github.com/repos/realXtend/naali/issues?", "Binary");
-RequestAsset("https://dl.dropboxusercontent.com/u/60485425/issues?", "Binary");
-
+// RequestAsset("https://api.github.com/repos/realXtend/naali/issues?", "Binary");  // Github json
+// RequestAsset("https://dl.dropboxusercontent.com/u/60485425/issues?", "Binary"); // Dropbox github json
+// RequestAsset("http://huhkiainen:huhhuh33@api.supertweet.net/1.1/search/tweets.json?q=%22%20%22&geocode=65.016667,25.466667,15mi?", "Binary"); // Dropbox json
+RequestAsset("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/tweets.json", "Binary"); // Dropbox twitter json
 
 //Checking if EC_Hoveringtext component has added after EC_Script to Entity
 
@@ -90,7 +91,7 @@ function RequestAsset(ref, type) {
 function DownloadReady( /* IAssetTransfer* */ transfer) {
     var data = transfer.RawData();
     // print(data);
-  
+
 
     print("Download ready");
     // print("  >> Source    :", transfer.SourceUrl());
@@ -104,33 +105,40 @@ function AssetReady( /* IAssetPtr* */ assetvar) {
 
 
 
-  var ts = new QTextStream(data, QIODevice.ReadOnly);
+    var ts = new QTextStream(data, QIODevice.ReadOnly);
 
-    var issues = JSON.parse(ts.readAll());
-    // print(issues);
-    for (var i in issues) {
-        var issue = issues[i];
-        // print(issue.updated_at);
+    // var objects = JSON.parse(ts.readAll()); // Github
+    var jsonfile = JSON.parse(ts.readAll()); // Twitter
+    var objects = jsonfile.statuses
 
-        var issueBox = loadBox();
-        print("issueBox entity");
-        print(issueBox);
+    for (var i in objects) {
+        var obj = objects[i];
+        // print(obj.updated_at);
 
-        issueBox.hoveringtext.text = issue.updated_at + " \n " + issue.title;
-        issueBox.placeable.SetPosition(new float3(i , 0.232, 0));
-        print("issue.updated_at " + issue.updated_at);
-        print("issue.title " + issue.title);
+        var person = loadPerson();
+        print("person entity");
+        print(person);
 
-        // issueBox.hoveringtext.SetTextColor(new Color());
-        // issueBox.hoveringtext.SetPosition(new float3(0,5,0));
+        // person.hoveringtext.text = obj.updated_at + " \n " + obj.title; // Github
+        person.hoveringtext.text = "@"+obj.user.screen_name + ": " + obj.text; // Twitter
+        person.placeable.SetPosition(new float3(i, 0.232, 0));
+        // Webrocket doesn't support hoveringtext so add it to the dynamiccomponent also
+        // person.dynamiccomponent.SetAttribute("text", obj.updated_at + " \n " + obj.title); // Github
+        person.dynamiccomponent.SetAttribute("text", "@"+obj.user.screen_name + ": " + obj.text); // Twitter
 
-        // Max issues
+        // print("obj.updated_at " + obj.updated_at);
+        // print("obj.title " + obj.title);
+
+        // person.hoveringtext.SetTextColor(new Color());
+        // person.hoveringtext.SetPosition(new float3(0,5,0));
+
+        // Max objs
         if (i == 5) {
             break;
         }
     }
 
-    
+
     // print("  >> Class ptr :", assetvar);
     // print("  >> Type      :", assetvar.Type());
     // print("  >> Name      :", assetvar.Name());
@@ -147,7 +155,7 @@ function print(s) {
     console.LogInfo(s);
 }
 
-function loadBox() {
+function loadPerson() {
     var parts = scene.EntitiesWithComponent("EC_DynamicComponent", "ScenePart");
     print("parts");
     print(parts);
@@ -203,11 +211,3 @@ function onClicked(entity, button, result) {
     print("entity clicked: " + entity.id);
     entity.dynamiccomponent.SetAttribute("rotate", !entity.dynamiccomponent.GetAttribute("rotate"));
 }
-
-
-// loadBox();
-
-// GITHUB
-// RequestAsset("https://api.github.com/repos/realXtend/naali/issues?", "Binary"); 
-
-// CreateBox();

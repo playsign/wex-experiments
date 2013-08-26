@@ -11,7 +11,6 @@ frame.Updated.connect(Update);
 // me.hoveringtext.text = "TEST";
 
 
-
 function Update(frametime) {
 	if (me.dynamiccomponent.GetAttribute("rotate")) {
 		// if (comp == null)
