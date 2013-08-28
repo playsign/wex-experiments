@@ -2,6 +2,8 @@ var speed = 1.0;
 var comp = me.hoveringtext;
 var bMouseIn = false;
 
+var jsonObjects = [];
+
 if (!comp)
     print("This Entity does not have HoveringText component");
 else
@@ -11,6 +13,16 @@ frame.Updated.connect(Update);
 scene.ComponentAdded.connect(CheckComponent);
 me.Action("MouseHoverIn").Triggered.connect(MouseIn);
 me.Action("MouseHoverOut").Triggered.connect(MouseOut);
+me.Action("DoRaycast").Triggered.connect(doRaycast);
+
+// And then initialize inputmapper to grab left mouse
+var inputmapper = me.GetOrCreateComponent("InputMapper", 2, false);
+inputmapper.contextPriority = 100;
+inputmapper.takeMouseEventsOverQt = true;
+inputmapper.modifiersEnabled = false;
+inputmapper.executionType = 1; // Execute actions locally
+// Connect left mouse button
+var inputContext = inputmapper.GetInputContext();
 
 // GITHUB
 engine.ImportExtension("qt.core"); //enables you to use qt 
@@ -19,19 +31,12 @@ var data = {};
 
 sceneinteract.EntityClicked.connect(onClicked);
 
-// // Register raw input context
-// this.data.InputContext = input.RegisterInputContextRaw("usingPhysicsInput",100);
-// this.data.InputContext.
-
-
-
 // RequestAsset("https://api.github.com/repos/realXtend/naali/issues?", "Binary");  // Github json
 // RequestAsset("https://dl.dropboxusercontent.com/u/60485425/issues?", "Binary"); // Dropbox github json
 // RequestAsset("http://huhkiainen:huhhuh33@api.supertweet.net/1.1/search/tweets.json?q=%22%20%22&geocode=65.016667,25.466667,15mi?", "Binary"); // Dropbox json
 RequestAsset("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/tweets.json", "Binary"); // Dropbox twitter json
 
 //Checking if EC_Hoveringtext component has added after EC_Script to Entity
-
 function CheckComponent(entity, component, type) {
     if (component.typeName == "EC_HoveringText")
         GetHoveringTextComponent();
@@ -107,12 +112,12 @@ function AssetReady( /* IAssetPtr* */ assetvar) {
 
     var ts = new QTextStream(data, QIODevice.ReadOnly);
 
-    // var objects = JSON.parse(ts.readAll()); // Github
+    // var jsonObjects = JSON.parse(ts.readAll()); // Github
     var jsonfile = JSON.parse(ts.readAll()); // Twitter
-    var objects = jsonfile.statuses
+    jsonObjects = jsonfile.statuses
 
-    for (var i in objects) {
-        var obj = objects[i];
+    for (var i in jsonObjects) {
+        var obj = jsonObjects[i];
         // print(obj.updated_at);
 
         var person = loadPerson();
@@ -120,11 +125,18 @@ function AssetReady( /* IAssetPtr* */ assetvar) {
         print(person);
 
         // person.hoveringtext.text = obj.updated_at + " \n " + obj.title; // Github
-        person.hoveringtext.text = "@"+obj.user.screen_name + ": " + obj.text; // Twitter
+        person.hoveringtext.text = "@" + obj.user.screen_name + ": " + obj.text; // Twitter
         person.placeable.SetPosition(new float3(i, 0.232, 0));
         // Webrocket doesn't support hoveringtext so add it to the dynamiccomponent also
         // person.dynamiccomponent.SetAttribute("text", obj.updated_at + " \n " + obj.title); // Github
-        person.dynamiccomponent.SetAttribute("text", "@"+obj.user.screen_name + ": " + obj.text); // Twitter
+        var screenNameAndTweet = "@" + obj.user.screen_name + ": " + obj.text;
+        person.dynamiccomponent.SetAttribute("tooltipText", screenNameAndTweet); // Twitter
+        person.dynamiccomponent.SetAttribute("screenNameAndTweet", screenNameAndTweet);
+        person.dynamiccomponent.SetAttribute("name", obj.user.name);
+        person.dynamiccomponent.SetAttribute("screen_name", obj.user.screen_name);
+        person.dynamiccomponent.SetAttribute("location", obj.user.location);
+        person.dynamiccomponent.SetAttribute("description", obj.user.description);
+
 
         // print("obj.updated_at " + obj.updated_at);
         // print("obj.title " + obj.title);
@@ -209,5 +221,53 @@ function loadPart(placeholder, partfile) {
 
 function onClicked(entity, button, result) {
     print("entity clicked: " + entity.id);
-    entity.dynamiccomponent.SetAttribute("rotate", !entity.dynamiccomponent.GetAttribute("rotate"));
+    var rotate = entity.dynamiccomponent.GetAttribute("rotate");
+    if (rotate != null) {
+        rotate = !rotate;
+        entity.dynamiccomponent.SetAttribute("rotate", rotate);
+
+        var text, location, description, text;
+
+        if (rotate) {
+            name = entity.dynamiccomponent.GetAttribute("name");
+            location = entity.dynamiccomponent.GetAttribute("location");
+            description = entity.dynamiccomponent.GetAttribute("description");
+            text = "Name: " + name + "\nLocation: " + location + "\n" + description;
+            entity.hoveringtext.text = text;
+            text = "Name: " + name + "<br>Location: " + location + "<br>" + description;
+            entity.dynamiccomponent.SetAttribute("tooltipText", text);
+        } else {
+            text = entity.dynamiccomponent.GetAttribute("screenNameAndTweet");
+            entity.hoveringtext.text = text;
+            entity.dynamiccomponent.SetAttribute("tooltipText", text);
+        }
+    }
+}
+
+function doRaycast(originAndDirection) {
+    var originAndDirectionArray = originAndDirection.split(/, */);
+
+    var rayOrigin = new float3(originAndDirectionArray[0], originAndDirectionArray[1], originAndDirectionArray[2]);
+    var rayDirection = new float3(originAndDirectionArray[3], originAndDirectionArray[4], originAndDirectionArray[5]);
+
+    var newRay = Ray(rayOrigin, rayDirection);
+
+    var result = scene.ogre.Raycast(newRay, 1);
+    if (result.entity === null) {
+        print("Raycast result was null");
+        return;
+    }
+
+    print("entity name: " + result.entity.dynamiccomponent.GetAttribute("name"));
+    if (result.entity != null) {
+        print("result.entity.dynamiccomponent.GetAttribute(type): " + result.entity.dynamiccomponent.GetAttribute("type"));
+        onClicked(result.entity);
+    }
+}
+
+function OnScriptDestroyed() {
+    var persons = scene.FindEntities("Person");
+    for (var i = persons.length - 1; i >= 0; --i) {
+        scene.RemoveEntity(persons[i].id);
+    }
 }
