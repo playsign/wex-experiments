@@ -13,7 +13,8 @@ frame.Updated.connect(Update);
 scene.ComponentAdded.connect(CheckComponent);
 me.Action("MouseHoverIn").Triggered.connect(MouseIn);
 me.Action("MouseHoverOut").Triggered.connect(MouseOut);
-me.Action("DoRaycast").Triggered.connect(doRaycast);
+// me.Action("DoRaycast").Triggered.connect(doRaycast);
+me.Action("onClickedWeb").Triggered.connect(onClickedWeb);
 
 // And then initialize inputmapper to grab left mouse
 var inputmapper = me.GetOrCreateComponent("InputMapper", 2, false);
@@ -219,6 +220,11 @@ function loadPart(placeholder, partfile) {
     return ent;
 }
 
+function onClickedWeb(entityId){
+    var ent = scene.EntityById(entityId);
+    onClicked(ent);
+}
+
 function onClicked(entity, button, result) {
     print("entity clicked: " + entity.id);
     var rotate = entity.dynamiccomponent.GetAttribute("rotate");
@@ -244,26 +250,26 @@ function onClicked(entity, button, result) {
     }
 }
 
-function doRaycast(originAndDirection) {
-    var originAndDirectionArray = originAndDirection.split(/, */);
+// function doRaycast(originAndDirection) {
+//     var originAndDirectionArray = originAndDirection.split(/, */);
 
-    var rayOrigin = new float3(originAndDirectionArray[0], originAndDirectionArray[1], originAndDirectionArray[2]);
-    var rayDirection = new float3(originAndDirectionArray[3], originAndDirectionArray[4], originAndDirectionArray[5]);
+//     var rayOrigin = new float3(originAndDirectionArray[0], originAndDirectionArray[1], originAndDirectionArray[2]);
+//     var rayDirection = new float3(originAndDirectionArray[3], originAndDirectionArray[4], originAndDirectionArray[5]);
 
-    var newRay = Ray(rayOrigin, rayDirection);
+//     var newRay = Ray(rayOrigin, rayDirection);x
 
-    var result = scene.ogre.Raycast(newRay, 1);
-    if (result.entity === null) {
-        print("Raycast result was null");
-        return;
-    }
+//     var result = scene.ogre.Raycast(newRay, 1);
+//     if (result.entity === null) {
+//         print("Raycast result was null");
+//         return;
+//     }
 
-    print("entity name: " + result.entity.dynamiccomponent.GetAttribute("name"));
-    if (result.entity != null) {
-        print("result.entity.dynamiccomponent.GetAttribute(type): " + result.entity.dynamiccomponent.GetAttribute("type"));
-        onClicked(result.entity);
-    }
-}
+//     print("entity name: " + result.entity.dynamiccomponent.GetAttribute("name"));
+//     if (result.entity != null) {
+//         print("result.entity.dynamiccomponent.GetAttribute(type): " + result.entity.dynamiccomponent.GetAttribute("type"));
+//         onClicked(result.entity);
+//     }
+// }
 
 function OnScriptDestroyed() {
     var persons = scene.FindEntities("Person");

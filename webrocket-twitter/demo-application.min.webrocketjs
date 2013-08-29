@@ -1,0 +1,160 @@
+console.log("Demo script started");
+
+var widgets = [];
+var personAmount = 6;
+
+var persons = [];
+
+for (var i = 0; i < personAmount; i++) {
+	newWidget = $("<div/>");
+	newWidget.attr("id", "twitter");
+	newWidget.css({
+		"background-color": "rgba(255,255,255,0.7)",
+		"color": "rgb(80,80,80)",
+		"border": "1px solid rgba(200,200,200,0.7)",
+		"font-size": 12,
+		"border-radius": 6,
+		"position": "absolute",
+		"top": 0,
+		"padding": 10,
+		"margin": 10
+	});
+	newWidget.html(meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("tooltipText"));
+
+	meshmoon.ui.addWidgetToScene(newWidget);
+	widgets.push(newWidget);
+}
+
+
+
+// Hook to events
+meshmoon.client.onUpdate(null, onUpdate);
+meshmoon.input.onMouseClick(null, onMouseClick);
+
+function initPersonArray() {
+	console.log("init person array");
+	for (var i = 0; i < meshmoon.renderer.scene.__objects.length; i++) {
+		if (meshmoon.renderer.scene.__objects[i].name == "https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/fig1.mesh_submesh_0") {
+			meshmoon.renderer.scene.__objects[i].rotate = false;
+			persons.push(meshmoon.renderer.scene.__objects[i]);
+		}
+	}
+}
+
+function onUpdate() {
+	if (meshmoon.scene.entities[0].script.scriptAsset.isLoaded) {
+		if (persons.length == 0) {
+			initPersonArray();
+		}
+
+		for (var i = 0; i < widgets.length; i++) {
+			setWidgetPosition(i);
+		}
+	}
+}
+
+function onMouseClick(event) {
+	if (event.leftDown) {
+		var x = (event.x / meshmoon.client.renderer.windowSize.width) * 2 - 1;
+		var y = -(event.y / meshmoon.client.renderer.windowSize.height) * 2 + 1;
+		var vector = new THREE.Vector3(x, y, 1);
+		projector.unprojectVector(vector, meshmoon.client.renderer.camera);
+		var ray = new THREE.Raycaster(meshmoon.client.renderer.camera.position, vector.sub(meshmoon.client.renderer.camera.position).normalize());
+		var intersects = ray.intersectObjects(persons);
+
+		if (intersects.length > 0) {
+			console.log(intersects[0].object);
+			var color = Math.random() * 0xffffff;
+			intersects[0].object.material.color.setHex(color);
+
+			for (var i = 0; i < persons.length; i++) {
+				if (persons[i] == intersects[0].object) {
+					var entityId = [(i + 5).toString()];
+					console.log("entityId: " + entityId);
+					meshmoon.scene.entities[3].exec(2, "onClickedWeb", entityId);
+
+					setWidgetText(i);
+				}
+			}
+			// console.log(" intersects[0].object.id: " + intersects[0].object.id);
+			// var entityId = meshmoon.scene.entities[intersects[0].object.id - 13];
+			// console.log("entityId: "+entityId);
+			// meshmoon.scene.entities[3].exec(2, "onClicked", meshmoon.scene.entities[entityId]);
+		}
+
+
+
+		// var originAndDirection = [meshmoon.client.renderer.camera.position.x.toString() + "," + meshmoon.client.renderer.camera.position.y.toString() + "," + meshmoon.client.renderer.camera.position.z.toString() + "," + vector.x.toString() + "," + vector.y.toString() + "," + vector.z.toString()];
+		// meshmoon.scene.entities[3].exec(2, "DoRaycast", originAndDirection);
+	}
+}
+
+function setWidgetPosition(i) {
+	var p, v, percX, percY, left, top;
+
+	// this will give us position relative to the world
+	// p = sphere.matrixWorld.getPosition().clone();
+	p = new THREE.Vector3(meshmoon.scene.entities[4 + i].placeable.attributes.transform.pos.x, meshmoon.scene.entities[4 + i].placeable.attributes.transform.pos.y, meshmoon.scene.entities[4 + i].placeable.attributes.transform.pos.z); // meshmoon.scene.entities[4].placeable.attributes.transform.pos;
+	// p = meshmoon.scene.entities[4].placeable.attributes.transform.pos;
+
+	// projectVector will translate position to 2d
+	projector = new THREE.Projector();
+	v = projector.projectVector(p, meshmoon.client.renderer.camera);
+
+	// translate our vector so that percX=0 represents
+	// the left edge, percX=1 is the right edge,
+	// percY=0 is the top edge, and percY=1 is the bottom edge.
+	percX = (v.x + 1) / 2;
+	percY = (-v.y + 1) / 2;
+
+	// scale these values to our viewport size
+	x = percX * meshmoon.client.renderer.windowSize.width;
+	y = percY * meshmoon.client.renderer.windowSize.height;
+
+	widgets[i].css({
+		left: x,
+		top: y
+	});
+
+	// position the overlay so that it's center is on top of
+	// the sphere we're tracking
+	// $trackingOverlay
+	// 	.css('left', (left - $trackingOverlay.width() / 2) + 'px')
+	// 	.css('top', (top - $trackingOverlay.height() / 2) + 'px');
+}
+
+function setWidgetText(i) {
+	// var rotate = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("rotate");
+	persons[i].rotate;
+	console.log("rotate: " + persons[i].rotate);
+	persons[i].rotate = !persons[i].rotate;
+
+	var text, location, description, text;
+
+	if (persons[i].rotate) {
+		name = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("name");
+		location = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("location");
+		description = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("description");
+		text = "Name: " + name + "\nLocation: " + location + "\n" + description;
+
+		text = "Name: " + name + "<br>Location: " + location + "<br>" + description;
+		widgets[i].html(text);
+	} else {
+		text = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("screenNameAndTweet");
+
+		widgets[i].html(text);
+	}
+
+
+	// meshmoon.scene.entities[4 + i].
+
+	// if not same
+	// widgets[i].html(meshmoon.scene.entities[4+i].dynamiccomponent.getAttribute("tooltipText"));
+}
+
+function onScriptDestroyed() {
+	for (var i = 0; i < widgets.length; i++) {
+		widgets[i].remove();
+		widgets = null;
+	}
+}
