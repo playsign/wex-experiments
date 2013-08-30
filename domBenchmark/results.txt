@@ -1,0 +1,6 @@
+On my setup (Chrome, Ubuntu, 2 GHz Intel T4200) this shows
+that running the test for 10k elements 100 times in a row,
+the pure-js version takes 19 ms. The DOM version of same
+takes 4700 ms. So a 250x difference.
+
+Caveat: the pure js version is rather simple.

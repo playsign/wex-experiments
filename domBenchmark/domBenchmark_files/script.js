@@ -1,6 +1,6 @@
 /* -*- js-indent-level: 8 -*- */
 
-var do_dom = false;
+var do_dom = true;
 
 // MUTATIONOBSERVER
 // create an observer instance
@@ -47,15 +47,16 @@ var purejs_ents = null;
 var createElements = function() {
 	sliderValue = $( "#spinner" ).spinner().spinner( "value" );
 	var start = Date.now();
-        purejs_ents = []
+        if (!do_dom)
+                purejs_ents = []
 	for (var i = 0; i < sliderValue; i++) {
                 if (do_dom) {
 		        e = document.createElement("entity");
 		        e.setAttribute("id", i);
 		        s.appendChild(e);
 		        observer.observe(e, config);
-                }
-                purejs_ents.push({'id': i, callback: purejs_callback});
+                } else
+                        purejs_ents.push({'id': i, callback: purejs_callback});
 	}
 
 	var end = Date.now();
