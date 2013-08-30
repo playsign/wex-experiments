@@ -20,7 +20,7 @@ function Update(frametime) {
 
 		// me.placeable.SetPosition(new float3(5, -102.232, 0));
 		var transform = me.placeable.transform;
-		transform.rot.y += 10 * frametime;
+		transform.rot.y  =  (100 * frametime + transform.rot.y) % 360;
 		me.placeable.transform = transform;
 		// me.placeable.SetRotation(me.placeable.)
 	}
