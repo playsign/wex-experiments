@@ -1,6 +1,7 @@
 var speed = 1.0;
 var comp = me.hoveringtext;
 var bMouseIn = false;
+var jsonObjectsMax = 6;
 
 var jsonObjects = [];
 
@@ -34,10 +35,13 @@ sceneinteract.EntityClicked.connect(onClicked);
 
 // RequestAsset("https://api.github.com/repos/realXtend/naali/issues?", "Binary");  // Github json
 // RequestAsset("https://dl.dropboxusercontent.com/u/60485425/issues?", "Binary"); // Dropbox github json
-// RequestAsset("http://huhkiainen:huhhuh33@api.supertweet.net/1.1/search/tweets.json?q=%22%20%22&geocode=65.016667,25.466667,15mi?", "Binary"); // Dropbox json
+// RequestAsset("http://huhkiainen:huhhuh33@api.supertweet.net/1.1/search/tweets.json?q=%22%20%22&geocode=65.016667,25.466667,15mi?", "Binary"); //  json
 RequestAsset("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/tweets.json", "Binary"); // Dropbox twitter json
+// RequestAsset("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/error.json", "Binary"); // Dropbox twitter json
+
 
 //Checking if EC_Hoveringtext component has added after EC_Script to Entity
+
 function CheckComponent(entity, component, type) {
     if (component.typeName == "EC_HoveringText")
         GetHoveringTextComponent();
@@ -115,7 +119,7 @@ function AssetReady( /* IAssetPtr* */ assetvar) {
 
     // var jsonObjects = JSON.parse(ts.readAll()); // Github
     var jsonfile = JSON.parse(ts.readAll()); // Twitter
-    jsonObjects = jsonfile.statuses
+    jsonObjects = jsonfile.statuses;
 
     for (var i in jsonObjects) {
         var obj = jsonObjects[i];
@@ -146,7 +150,7 @@ function AssetReady( /* IAssetPtr* */ assetvar) {
         // person.hoveringtext.SetPosition(new float3(0,5,0));
 
         // Max objs
-        if (i == 5) {
+        if (i == jsonObjectsMax  - 1) {
             break;
         }
     }
@@ -220,9 +224,13 @@ function loadPart(placeholder, partfile) {
     return ent;
 }
 
-function onClickedWeb(entityId){
-    var ent = scene.EntityById(entityId);
-    onClicked(ent);
+function onClickedWeb(entityId) {
+    var persons = scene.FindEntities("Person");
+    print("entityId "+ entityId);
+    print("persons[entityId]: "+persons[entityId].id);
+
+    // var ent = scene.EntityById(entityId);
+    onClicked(persons[entityId]);
 }
 
 function onClicked(entity, button, result) {

@@ -1,54 +1,95 @@
 console.log("Demo script started");
 
-var widgets = [];
-var personAmount = 6;
-
-var persons = [];
-
-for (var i = 0; i < personAmount; i++) {
-	newWidget = $("<div/>");
-	newWidget.attr("id", "twitter");
-	newWidget.css({
-		"background-color": "rgba(255,255,255,0.7)",
-		"color": "rgb(80,80,80)",
-		"border": "1px solid rgba(200,200,200,0.7)",
-		"font-size": 12,
-		"border-radius": 6,
-		"position": "absolute",
-		"top": 0,
-		"padding": 10,
-		"margin": 10
+// JSON
+var jsonLoaded = false;
+var jsonObjects = [];
+$.getJSON("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/tweets.json", {
+	include_entities: "true",
+	include_rts: "true", //retweets
+}, function(data) {
+	$.each(data, function(i, item) {
+		jsonObjects.push(item);
 	});
-	newWidget.html(meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("tooltipText"));
+}).done(function(json) {
+	console.log("JSON success");
+	jsonLoaded = true;
+})
+	.fail(function(jqxhr, textStatus, error) {
+	var err = textStatus + ', ' + error;
+	console.log("JSON fail: " + err);
+});
 
-	meshmoon.ui.addWidgetToScene(newWidget);
-	widgets.push(newWidget);
+var widgets = [];
+var serverSceneEntity;
+for (var i = 0; i < meshmoon.scene.entities.length; i++) {
+	if (meshmoon.scene.entities[i].name == "scene") {
+		serverSceneEntity = meshmoon.scene.entities[i];
+	}
 }
 
+var serverPersons = [];
 
+var clientPersons = [];
 
 // Hook to events
 meshmoon.client.onUpdate(null, onUpdate);
 meshmoon.input.onMouseClick(null, onMouseClick);
 
-function initPersonArray() {
+function initWidgets() {
+	for (var i = 0; i < serverPersons.length; i++) {
+		newWidget = $("<div/>");
+		newWidget.attr("id", "twitter");
+		newWidget.css({
+			"background-color": "rgba(255,255,255,0.7)",
+			"color": "rgb(80,80,80)",
+			"border": "1px solid rgba(200,200,200,0.7)",
+			"font-size": 12,
+			"border-radius": 6,
+			"position": "absolute",
+			"top": 0,
+			"padding": 10,
+			"margin": 10
+		});
+
+		meshmoon.ui.addWidgetToScene(newWidget);
+		widgets.push(newWidget);
+
+		setWidgetText(i);
+	}
+}
+
+function initServerPersonArray() {
+	for (var i = 0; i < meshmoon.scene.entities.length; i++) {
+		if (meshmoon.scene.entities[i].name == "Person") {
+			meshmoon.scene.entities[i].rotate = false;
+			serverPersons.push(meshmoon.scene.entities[i]);
+		}
+	}
+}
+
+function initClientPersonArray() {
 	console.log("init person array");
 	for (var i = 0; i < meshmoon.renderer.scene.__objects.length; i++) {
 		if (meshmoon.renderer.scene.__objects[i].name == "https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/fig1.mesh_submesh_0") {
 			meshmoon.renderer.scene.__objects[i].rotate = false;
-			persons.push(meshmoon.renderer.scene.__objects[i]);
+			clientPersons.push(meshmoon.renderer.scene.__objects[i]);
+
+			// var color = Math.random() * 0xffffff;
+			// meshmoon.renderer.scene.__objects[i].material.color.setHex(color);
 		}
 	}
 }
 
 function onUpdate() {
-	if (meshmoon.scene.entities[0].script.scriptAsset.isLoaded) {
-		if (persons.length == 0) {
-			initPersonArray();
-		}
-
-		for (var i = 0; i < widgets.length; i++) {
-			setWidgetPosition(i);
+	if (jsonLoaded && meshmoon.scene.entities[0].script.scriptAsset.isLoaded) { // App
+		if (clientPersons.length == 0) {
+			initServerPersonArray();
+			initClientPersonArray();
+			initWidgets();
+		} else {
+			for (var i = 0; i < widgets.length; i++) {
+				setWidgetPosition(i);
+			}
 		}
 	}
 }
@@ -60,18 +101,18 @@ function onMouseClick(event) {
 		var vector = new THREE.Vector3(x, y, 1);
 		projector.unprojectVector(vector, meshmoon.client.renderer.camera);
 		var ray = new THREE.Raycaster(meshmoon.client.renderer.camera.position, vector.sub(meshmoon.client.renderer.camera.position).normalize());
-		var intersects = ray.intersectObjects(persons);
+		var intersects = ray.intersectObjects(clientPersons);
 
 		if (intersects.length > 0) {
 			console.log(intersects[0].object);
-			var color = Math.random() * 0xffffff;
-			intersects[0].object.material.color.setHex(color);
 
-			for (var i = 0; i < persons.length; i++) {
-				if (persons[i] == intersects[0].object) {
-					var entityId = [(i + 5).toString()];
-					console.log("entityId: " + entityId);
-					meshmoon.scene.entities[3].exec(2, "onClickedWeb", entityId);
+			for (var i = 0; i < clientPersons.length; i++) {
+				if (clientPersons[i] == intersects[0].object) {
+					// var entityId = [(i + 5).toString()];
+					console.log("i: " + i);
+					//scene.js
+
+					serverSceneEntity.exec(2, "onClickedWeb", i.toString());
 
 					setWidgetText(i);
 				}
@@ -94,7 +135,7 @@ function setWidgetPosition(i) {
 
 	// this will give us position relative to the world
 	// p = sphere.matrixWorld.getPosition().clone();
-	p = new THREE.Vector3(meshmoon.scene.entities[4 + i].placeable.attributes.transform.pos.x, meshmoon.scene.entities[4 + i].placeable.attributes.transform.pos.y, meshmoon.scene.entities[4 + i].placeable.attributes.transform.pos.z); // meshmoon.scene.entities[4].placeable.attributes.transform.pos;
+	p = new THREE.Vector3(serverPersons[i].placeable.attributes.transform.pos.x, serverPersons[i].placeable.attributes.transform.pos.y, serverPersons[i].placeable.attributes.transform.pos.z); // meshmoon.scene.entities[4].placeable.attributes.transform.pos;
 	// p = meshmoon.scene.entities[4].placeable.attributes.transform.pos;
 
 	// projectVector will translate position to 2d
@@ -125,22 +166,29 @@ function setWidgetPosition(i) {
 
 function setWidgetText(i) {
 	// var rotate = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("rotate");
-	persons[i].rotate;
-	console.log("rotate: " + persons[i].rotate);
-	persons[i].rotate = !persons[i].rotate;
+	// clientPersons[i].rotate;
+	console.log("rotate: " + clientPersons[i].rotate);
+	clientPersons[i].rotate = !clientPersons[i].rotate;
 
-	var text, location, description, text;
+	var name, text, location, description, text;
 
-	if (persons[i].rotate) {
-		name = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("name");
-		location = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("location");
-		description = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("description");
+	if (clientPersons[i].rotate) {
+
+		// // server
+		// name = serverPersons[i].dynamiccomponent.getAttribute("name");
+		// location = serverPersons[i].dynamiccomponent.getAttribute("location");
+		// description = serverPersons[i].dynamiccomponent.getAttribute("description");
+
+		name = jsonObjects[0][i].user.name;
+		location = jsonObjects[0][i].user.location;
+		description = jsonObjects[0][i].user.description;
+
 		text = "Name: " + name + "\nLocation: " + location + "\n" + description;
 
 		text = "Name: " + name + "<br>Location: " + location + "<br>" + description;
 		widgets[i].html(text);
 	} else {
-		text = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("screenNameAndTweet");
+		text = "@" + jsonObjects[0][i].user.screen_name + ": " + jsonObjects[0][i].text;
 
 		widgets[i].html(text);
 	}
