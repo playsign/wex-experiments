@@ -48,7 +48,7 @@ var createElements = function() {
 	sliderValue = $( "#spinner" ).spinner().spinner( "value" );
 	var start = Date.now();
         if (!do_dom)
-                purejs_ents = []
+                purejs_ents = [];
 	for (var i = 0; i < sliderValue; i++) {
                 if (do_dom) {
 		        e = document.createElement("entity");
