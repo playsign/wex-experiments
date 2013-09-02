@@ -22,7 +22,9 @@ How to replicate:
 toggle the do_dom bool in the script. then use the create
 element button to create desired number of elements.
 For timing, use the JS console:
-var start = Date.now(); modifyElements(); console.log(Date.now() - start);
+
+    var start = Date.now(); modifyElements(); console.log(Date.now() - start);
+
 add a for loop around modifyElements when testing the pure js version.
 
 What is tested:
