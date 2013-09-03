@@ -1,6 +1,11 @@
-console.log("Demo script started");
+console.log("Twitter script started");
 
-// JSON
+var personAmount = 6;
+var selectedPerson;
+
+var clock = new THREE.Clock();
+
+// JSON setup
 var jsonLoaded = false;
 var jsonObjects = [];
 $.getJSON("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/tweets.json", {
@@ -20,23 +25,37 @@ $.getJSON("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-expe
 });
 
 var widgets = [];
-var serverSceneEntity;
-for (var i = 0; i < meshmoon.scene.entities.length; i++) {
-	if (meshmoon.scene.entities[i].name == "scene") {
-		serverSceneEntity = meshmoon.scene.entities[i];
-	}
+
+var threePersons = [];
+var meshmoonPersons = [];
+
+
+// Create persons
+for (var i = 0; i < 6; i++) {
+	// create local entity
+	var ent = meshmoon.scene.createLocalEntity(["Placeable", "Name", "Mesh"]);
+
+	// placeable
+	ent.placeable.setPosition(i * 2, 0, -10);
+	ent.placeable.setScale(0.1, 0.1, 0.05);
+
+	// name
+	ent.setName("Person");
+
+	// mesh
+	ent.mesh.setMesh("https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/fig1.mesh");
+	ent.mesh.setMaterial(["https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/fig1.material"]);
+
+	meshmoonPersons.push(ent);
 }
-
-var serverPersons = [];
-
-var clientPersons = [];
 
 // Hook to events
 meshmoon.client.onUpdate(null, onUpdate);
 meshmoon.input.onMouseClick(null, onMouseClick);
 
+// 2D widgets to show tweets
 function initWidgets() {
-	for (var i = 0; i < serverPersons.length; i++) {
+	for (var i = 0; i < personAmount; i++) {
 		newWidget = $("<div/>");
 		newWidget.attr("id", "twitter");
 		newWidget.css({
@@ -48,7 +67,8 @@ function initWidgets() {
 			"position": "absolute",
 			"top": 0,
 			"padding": 10,
-			"margin": 10
+			"margin": 10,
+			"width": 250
 		});
 
 		meshmoon.ui.addWidgetToScene(newWidget);
@@ -58,37 +78,35 @@ function initWidgets() {
 	}
 }
 
-function initServerPersonArray() {
-	for (var i = 0; i < meshmoon.scene.entities.length; i++) {
-		if (meshmoon.scene.entities[i].name == "Person") {
-			meshmoon.scene.entities[i].rotate = false;
-			serverPersons.push(meshmoon.scene.entities[i]);
-		}
-	}
-}
+// Fill three.js object array
+function initThreePersonArray() {
+	// console.log("init person array");
+	meshes = meshmoon.renderer.getAllMeshes();
 
-function initClientPersonArray() {
-	console.log("init person array");
-	for (var i = 0; i < meshmoon.renderer.scene.__objects.length; i++) {
-		if (meshmoon.renderer.scene.__objects[i].name == "https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/fig1.mesh_submesh_0") {
-			meshmoon.renderer.scene.__objects[i].rotate = false;
-			clientPersons.push(meshmoon.renderer.scene.__objects[i]);
-
-			// var color = Math.random() * 0xffffff;
-			// meshmoon.renderer.scene.__objects[i].material.color.setHex(color);
+	for (var i = 0; i < meshes.length; i++) {
+		if (meshes[i].name == "https://dl.dropboxusercontent.com/u/60485425/Playsign/GitHub/wex-experiments/webrocket-twitter/fig1.mesh_submesh_0") {
+			meshes[i].rotate = false;
+			threePersons.push(meshes[i]);
 		}
 	}
 }
 
 function onUpdate() {
 	if (jsonLoaded && meshmoon.scene.entities[0].script.scriptAsset.isLoaded) { // App
-		if (clientPersons.length == 0) {
-			initServerPersonArray();
-			initClientPersonArray();
+		if (threePersons.length == 0) {
+			initThreePersonArray();
 			initWidgets();
 		} else {
 			for (var i = 0; i < widgets.length; i++) {
 				setWidgetPosition(i);
+			}
+
+			// Rotate the selected person
+			if (selectedPerson) {
+				var y = (100 * clock.getDelta() + selectedPerson.rotation.y) % 360;
+				var vector = new THREE.Vector3(0, y, 0);
+
+				selectedPerson.rotation = vector;
 			}
 		}
 	}
@@ -101,42 +119,28 @@ function onMouseClick(event) {
 		var vector = new THREE.Vector3(x, y, 1);
 		projector.unprojectVector(vector, meshmoon.client.renderer.camera);
 		var ray = new THREE.Raycaster(meshmoon.client.renderer.camera.position, vector.sub(meshmoon.client.renderer.camera.position).normalize());
-		var intersects = ray.intersectObjects(clientPersons);
+		var intersects = ray.intersectObjects(threePersons);
 
 		if (intersects.length > 0) {
-			console.log(intersects[0].object);
+			// Person selected. Rotate / change the widget text
 
-			for (var i = 0; i < clientPersons.length; i++) {
-				if (clientPersons[i] == intersects[0].object) {
-					// var entityId = [(i + 5).toString()];
-					console.log("i: " + i);
-					//scene.js
-
-					serverSceneEntity.exec(2, "onClickedWeb", i.toString());
+			for (var i = 0; i < threePersons.length; i++) {
+				if (threePersons[i] == intersects[0].object) {
+					selectedPerson = intersects[0].object;
 
 					setWidgetText(i);
 				}
 			}
-			// console.log(" intersects[0].object.id: " + intersects[0].object.id);
-			// var entityId = meshmoon.scene.entities[intersects[0].object.id - 13];
-			// console.log("entityId: "+entityId);
-			// meshmoon.scene.entities[3].exec(2, "onClicked", meshmoon.scene.entities[entityId]);
 		}
-
-
-
-		// var originAndDirection = [meshmoon.client.renderer.camera.position.x.toString() + "," + meshmoon.client.renderer.camera.position.y.toString() + "," + meshmoon.client.renderer.camera.position.z.toString() + "," + vector.x.toString() + "," + vector.y.toString() + "," + vector.z.toString()];
-		// meshmoon.scene.entities[3].exec(2, "DoRaycast", originAndDirection);
 	}
 }
 
+// Calculate and set widget position
 function setWidgetPosition(i) {
 	var p, v, percX, percY, left, top;
 
 	// this will give us position relative to the world
-	// p = sphere.matrixWorld.getPosition().clone();
-	p = new THREE.Vector3(serverPersons[i].placeable.attributes.transform.pos.x, serverPersons[i].placeable.attributes.transform.pos.y, serverPersons[i].placeable.attributes.transform.pos.z); // meshmoon.scene.entities[4].placeable.attributes.transform.pos;
-	// p = meshmoon.scene.entities[4].placeable.attributes.transform.pos;
+	p = new THREE.Vector3(meshmoonPersons[i].placeable.attributes.transform.pos.x, meshmoonPersons[i].placeable.attributes.transform.pos.y + 1, meshmoonPersons[i].placeable.attributes.transform.pos.z);
 
 	// projectVector will translate position to 2d
 	projector = new THREE.Projector();
@@ -152,38 +156,26 @@ function setWidgetPosition(i) {
 	x = percX * meshmoon.client.renderer.windowSize.width;
 	y = percY * meshmoon.client.renderer.windowSize.height;
 
+	// calculate distance between the camera and the person. Used for fading the tooltip
+	var distance = meshmoonPersons[i].placeable.attributes.transform.pos.distanceTo(meshmoon.client.renderer.camera.position);
+	var distance = 2 / distance;
+
 	widgets[i].css({
 		left: x,
-		top: y
+		top: y,
+		opacity: distance
 	});
-
-	// position the overlay so that it's center is on top of
-	// the sphere we're tracking
-	// $trackingOverlay
-	// 	.css('left', (left - $trackingOverlay.width() / 2) + 'px')
-	// 	.css('top', (top - $trackingOverlay.height() / 2) + 'px');
 }
 
 function setWidgetText(i) {
-	// var rotate = meshmoon.scene.entities[4 + i].dynamiccomponent.getAttribute("rotate");
-	// clientPersons[i].rotate;
-	console.log("rotate: " + clientPersons[i].rotate);
-	clientPersons[i].rotate = !clientPersons[i].rotate;
+	threePersons[i].rotate = !threePersons[i].rotate;
 
 	var name, text, location, description, text;
 
-	if (clientPersons[i].rotate) {
-
-		// // server
-		// name = serverPersons[i].dynamiccomponent.getAttribute("name");
-		// location = serverPersons[i].dynamiccomponent.getAttribute("location");
-		// description = serverPersons[i].dynamiccomponent.getAttribute("description");
-
+	if (threePersons[i].rotate) {
 		name = jsonObjects[0][i].user.name;
 		location = jsonObjects[0][i].user.location;
 		description = jsonObjects[0][i].user.description;
-
-		text = "Name: " + name + "\nLocation: " + location + "\n" + description;
 
 		text = "Name: " + name + "<br>Location: " + location + "<br>" + description;
 		widgets[i].html(text);
@@ -192,12 +184,6 @@ function setWidgetText(i) {
 
 		widgets[i].html(text);
 	}
-
-
-	// meshmoon.scene.entities[4 + i].
-
-	// if not same
-	// widgets[i].html(meshmoon.scene.entities[4+i].dynamiccomponent.getAttribute("tooltipText"));
 }
 
 function onScriptDestroyed() {
