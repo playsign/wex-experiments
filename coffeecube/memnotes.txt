@@ -1,0 +1,16 @@
+with scalefactor 0.9, ntex=10
+
+task manager - tab: 98M, GPU: 26M
+top: tab process 137M, GPU: 129M
+--
+
+with scalefactor 0.4, ntex=10
+
+task manager - tab: 97M, GPU: 27M
+top: tab process 139M, GPU: 130M
+
+--
+
+with scalefactor 0.9, ntex=20
+
+task manager - tab: 96M, GPU: 27M
